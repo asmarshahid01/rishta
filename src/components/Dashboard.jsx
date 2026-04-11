@@ -165,31 +165,40 @@ const Dashboard = () => {
                 </div>
 
                 {/* Personal Information */}
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center gap-2 text-zinc-500 mb-2">
-                    <User size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Details</span>
-                  </div>
-                  {selectedProfile.attributes?.map((attr, i) => (
-                    <div key={i} className="flex justify-between border-b border-zinc-800/50 pb-2">
-                      <span className="text-zinc-500 text-[9px] uppercase tracking-[0.1em]">{attr.tag}</span>
-                      <span className="text-zinc-100 font-medium text-xs sm:text-sm">{attr.value}</span>
+                <div className="space-y-4 mb-10">
+                <div className="flex items-center gap-2 text-zinc-500 mb-4">
+                    <User size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Personal Details</span>
+                </div>
+                {selectedProfile.attributes?.map((attr, i) => (
+                    <div key={i} className="flex flex-col border-b border-zinc-800/50 pb-3 gap-1">
+                    <span className="text-zinc-500 text-[9px] uppercase tracking-[0.15em] leading-none">
+                        {attr.tag}
+                    </span>
+                    {/* text-right on desktop for balance, but wraps cleanly on mobile */}
+                    <span className="text-zinc-100 font-medium text-sm sm:text-base leading-relaxed break-words">
+                        {attr.value}
+                    </span>
                     </div>
-                  ))}
+                ))}
                 </div>
 
                 {/* Requirements */}
                 {selectedProfile.partnerRequirements?.length > 0 && (
-                  <div className="space-y-3 pt-4">
-                    <div className="flex items-center gap-2 text-zinc-500 mb-2">
-                      <ClipboardList size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Spouse Requirements</span>
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                    <div className="flex items-center gap-2 text-zinc-500 mb-4">
+                    <ClipboardList size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Spouse Requirements</span>
                     </div>
                     {selectedProfile.partnerRequirements.map((req, i) => (
-                      <div key={i} className="flex justify-between border-b border-zinc-800/50 pb-2">
-                        <span className="text-zinc-500 text-[9px] uppercase tracking-[0.1em]">{req.tag}</span>
-                        <span className="text-zinc-100 font-medium text-xs sm:text-sm">{req.value}</span>
-                      </div>
+                    <div key={i} className="flex flex-col border-b border-zinc-800/50 pb-3 gap-1">
+                        <span className="text-zinc-500 text-[9px] uppercase tracking-[0.15em] leading-none">
+                        {req.tag}
+                        </span>
+                        <span className="text-zinc-100 font-medium text-sm sm:text-base leading-relaxed break-words">
+                        {req.value}
+                        </span>
+                    </div>
                     ))}
-                  </div>
+                </div>
                 )}
               </div>
 
