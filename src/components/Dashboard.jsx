@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import { X, User, Edit2, Filter, Search } from 'lucide-react';
+import { X, User, Edit2, Filter, Search, MessageCircle, Share2, ClipboardList } from 'lucide-react';
 
 const Dashboard = () => {
   const [profiles, setProfiles] = useState([]);
@@ -38,9 +38,36 @@ const Dashboard = () => {
     setActiveImgIndex(0);
   };
 
+  // --- WhatsApp Logic ---
+  const openWhatsAppChat = (number) => {
+    const cleanNumber = number.replace(/\D/g, '');
+    window.open(`https://wa.me/${cleanNumber}`, '_blank');
+  };
+
+  const shareToWhatsApp = (profile) => {
+    let text = `*PROFILE DETAILS: ${profile.name.toUpperCase()}*\n`;
+    text += `Gender: ${profile.gender}\n\n`;
+    
+    if (profile.attributes?.length > 0) {
+      text += `*Personal Information:*\n`;
+      profile.attributes.forEach(attr => {
+        if(attr.tag && attr.value) text += `• ${attr.tag}: ${attr.value}\n`;
+      });
+    }
+
+    if (profile.partnerRequirements?.length > 0) {
+      text += `\n*Partner Requirements:*\n`;
+      profile.partnerRequirements.forEach(req => {
+        if(req.tag && req.value) text += `• ${req.tag}: ${req.value}\n`;
+      });
+    }
+
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      
       {/* Tab Switcher */}
       <div className="flex gap-4 sm:gap-8 mb-6 sm:mb-8 border-b border-zinc-900 overflow-x-auto no-scrollbar">
         {['Male', 'Female'].map(t => (
@@ -60,17 +87,15 @@ const Dashboard = () => {
           <Filter size={14} />
           <span className="text-[10px] uppercase font-bold tracking-widest">Filter</span>
         </div>
-        
         <select 
-          className="bg-zinc-800 text-sm p-2.5 sm:p-2 px-3 rounded-xl sm:rounded-lg border-none outline-none text-zinc-300 min-w-[120px]"
+          className="bg-zinc-800 text-sm p-2.5 sm:p-2 px-3 rounded-xl border-none outline-none text-zinc-300 min-w-[120px]"
           onChange={(e) => setFilterTag(e.target.value)}
           value={filterTag}
         >
           <option value="">All Attributes</option>
           {availableTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
         </select>
-
-        <div className="flex-1 flex items-center bg-zinc-800 rounded-xl sm:rounded-lg px-3 h-11 sm:h-auto">
+        <div className="flex-1 flex items-center bg-zinc-800 rounded-xl px-3 h-11 sm:h-auto">
           <Search size={14} className="text-zinc-500" />
           <input 
             placeholder="Search values..." 
@@ -92,9 +117,7 @@ const Dashboard = () => {
             {profile.imageUrls?.[0] ? (
               <img src={profile.imageUrls[0]} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-zinc-800">
-                <User size={40} />
-              </div>
+              <div className="w-full h-full flex items-center justify-center text-zinc-800"><User size={40} /></div>
             )}
             <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black via-black/60 to-transparent">
               <h3 className="text-white font-semibold text-sm sm:text-lg truncate">{profile.name}</h3>
@@ -109,70 +132,79 @@ const Dashboard = () => {
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-zinc-900 border-t sm:border border-zinc-800 w-full max-w-4xl rounded-t-[2rem] sm:rounded-[2.5rem] overflow-hidden relative flex flex-col md:flex-row h-[90vh] sm:h-auto max-h-[92vh] sm:max-h-[90vh]">
             
-            <button 
-              onClick={() => setSelectedProfile(null)} 
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[70] p-2 bg-zinc-800/80 backdrop-blur rounded-full text-white hover:bg-zinc-700 transition"
-            >
-              <X size={20} />
-            </button>
+            <button onClick={() => setSelectedProfile(null)} className="absolute top-4 right-4 z-[70] p-2 bg-zinc-800/80 backdrop-blur rounded-full text-white hover:bg-zinc-700 transition"><X size={20} /></button>
             
-            {/* Gallery Section - Fixed height on mobile (40vh) */}
-            <div className="w-full md:w-1/2 bg-black flex flex-col p-4 sm:p-6 border-b md:border-b-0 md:border-r border-zinc-800 h-[40vh] sm:h-auto">
-              <div className="flex-1 flex items-center justify-center overflow-hidden rounded-2xl sm:rounded-3xl bg-zinc-950 relative">
+            {/* Gallery Section */}
+            <div className="w-full md:w-1/2 bg-black flex flex-col p-4 sm:p-6 border-b md:border-b-0 md:border-r border-zinc-800 h-[35vh] sm:h-auto">
+              <div className="flex-1 flex items-center justify-center overflow-hidden rounded-2xl bg-zinc-950 relative">
                 {selectedProfile.imageUrls?.[activeImgIndex] ? (
-                  <img 
-                    src={selectedProfile.imageUrls[activeImgIndex]} 
-                    className="max-h-full w-full object-contain" 
-                    alt="profile" 
-                  />
+                  <img src={selectedProfile.imageUrls[activeImgIndex]} className="max-h-full w-full object-contain" alt="profile" />
                 ) : (
                   <User size={60} className="text-zinc-900" />
                 )}
               </div>
-              
-              <div className="flex gap-2 sm:gap-3 mt-4 overflow-x-auto py-1 no-scrollbar shrink-0">
+              <div className="flex gap-2 mt-4 overflow-x-auto py-1 no-scrollbar shrink-0">
                 {selectedProfile.imageUrls?.map((url, i) => (
-                  <img 
-                    key={i} src={url} 
-                    onClick={() => setActiveImgIndex(i)}
-                    className={`w-10 h-10 sm:w-16 sm:h-16 object-cover rounded-lg sm:rounded-xl cursor-pointer border-2 transition-all shrink-0 ${activeImgIndex === i ? 'border-white' : 'border-transparent opacity-40'}`}
-                  />
+                  <img key={i} src={url} onClick={() => setActiveImgIndex(i)} className={`w-10 h-10 sm:w-16 sm:h-16 object-cover rounded-lg cursor-pointer border-2 transition-all ${activeImgIndex === i ? 'border-white' : 'border-transparent opacity-40'}`} />
                 ))}
               </div>
             </div>
 
-            {/* Content Section - Scrollable independently */}
-            <div className="p-6 sm:p-10 md:p-12 md:w-1/2 overflow-y-auto flex-1 flex flex-col bg-zinc-900">
+            {/* Content Section */}
+            <div className="p-6 sm:p-10 md:w-1/2 overflow-y-auto flex-1 flex flex-col bg-zinc-900">
               <div className="flex-1">
-                <div className="mb-6 sm:mb-10 flex justify-between items-start">
+                <div className="mb-6 flex justify-between items-start">
                   <div>
                     <h2 className="text-2xl sm:text-4xl font-light text-white mb-2">{selectedProfile.name}</h2>
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest bg-zinc-800 px-2 py-1 rounded-md">{selectedProfile.gender}</span>
                   </div>
-                  <Link 
-                    to={`/edit/${selectedProfile.id}`} 
-                    className="p-3 bg-zinc-800 text-zinc-300 rounded-full hover:text-white hover:bg-zinc-700 transition"
-                  >
-                    <Edit2 size={16} />
-                  </Link>
+                  <div className="flex gap-2">
+                    <button onClick={() => shareToWhatsApp(selectedProfile)} className="p-3 bg-zinc-800 text-zinc-300 rounded-full hover:text-green-500 transition" title="Share Profile"><Share2 size={16} /></button>
+                    <Link to={`/edit/${selectedProfile.id}`} className="p-3 bg-zinc-800 text-zinc-300 rounded-full hover:text-white transition"><Edit2 size={16} /></Link>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Personal Information */}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-center gap-2 text-zinc-500 mb-2">
+                    <User size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Details</span>
+                  </div>
                   {selectedProfile.attributes?.map((attr, i) => (
-                    <div key={i} className="flex justify-between border-b border-zinc-800 pb-3">
-                      <span className="text-zinc-500 text-[9px] uppercase tracking-[0.2em]">{attr.tag}</span>
+                    <div key={i} className="flex justify-between border-b border-zinc-800/50 pb-2">
+                      <span className="text-zinc-500 text-[9px] uppercase tracking-[0.1em]">{attr.tag}</span>
                       <span className="text-zinc-100 font-medium text-xs sm:text-sm">{attr.value}</span>
                     </div>
                   ))}
                 </div>
+
+                {/* Requirements */}
+                {selectedProfile.partnerRequirements?.length > 0 && (
+                  <div className="space-y-3 pt-4">
+                    <div className="flex items-center gap-2 text-zinc-500 mb-2">
+                      <ClipboardList size={14}/><span className="text-[10px] uppercase font-bold tracking-widest">Spouse Requirements</span>
+                    </div>
+                    {selectedProfile.partnerRequirements.map((req, i) => (
+                      <div key={i} className="flex justify-between border-b border-zinc-800/50 pb-2">
+                        <span className="text-zinc-500 text-[9px] uppercase tracking-[0.1em]">{req.tag}</span>
+                        <span className="text-zinc-100 font-medium text-xs sm:text-sm">{req.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <button 
-                onClick={() => setSelectedProfile(null)}
-                className="mt-8 w-full py-4 bg-zinc-800 text-zinc-400 rounded-xl sm:rounded-2xl text-sm font-medium hover:text-white transition sm:hidden"
-              >
-                Close Preview
-              </button>
+              {/* WhatsApp CTA */}
+              <div className="mt-8 space-y-3">
+                {selectedProfile.whatsapp && (
+                  <button 
+                    onClick={() => openWhatsAppChat(selectedProfile.whatsapp)}
+                    className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl sm:rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition"
+                  >
+                    <MessageCircle size={18} /> Chat on WhatsApp
+                  </button>
+                )}
+                <button onClick={() => setSelectedProfile(null)} className="w-full py-4 bg-zinc-800 text-zinc-400 rounded-xl sm:rounded-2xl text-sm font-medium hover:text-white transition">Close Preview</button>
+              </div>
             </div>
           </div>
         </div>
