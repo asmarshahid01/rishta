@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight, ShieldAlert } from 'lucide-react';
-import { ACCESS_CODE as LOCAL_CODE } from '../config'; // Import directly from config
 
 const SecurityGate = ({ children }) => {
-  const MASTER_CODE = import.meta.env?.REACT_APP_ACCESS_CODE || LOCAL_CODE;
+  const MASTER_CODE = "idontknow123";
   const [accessCode, setAccessCode] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(localStorage.getItem('app_access_granted') === 'true');
   const [error, setError] = useState(false);
@@ -12,7 +11,7 @@ const SecurityGate = ({ children }) => {
     e.preventDefault();
     
     // Using the imported ACCESS_CODE directly
-    if (accessCode === ACCESS_CODE) {
+    if (accessCode === MASTER_CODE) {
       localStorage.setItem('app_access_granted', 'true');
       setIsAuthorized(true);
       setError(false);
